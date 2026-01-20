@@ -11,11 +11,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans SC', sans-serif; background-color: #f8fafc; }
         
-        /* 布局与卡片基础 */
         .card-hover:hover { transform: translateY(-2px); transition: all 0.2s ease-in-out; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 350px; max-height: 400px; }
+        /* 图表高度 */
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 400px; max-height: 450px; }
         
-        /* 导航栏状态 */
         .active-tab { border-bottom: 2px solid #0ea5e9; color: #0ea5e9; font-weight: 600; }
         .company-btn.active { background-color: #0f172a; color: white; border-color: #0f172a; }
         
@@ -24,8 +23,6 @@
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        /* 新品列表滚动条 (防止产品太多撑破卡片) */
         .npi-scroll-container { max-height: 320px; overflow-y: auto; }
     </style>
 </head>
@@ -68,7 +65,6 @@
                         </div>
                         <ul id="brand-focus-list" class="space-y-3 text-sm text-slate-700"></ul>
                     </div>
-                    
                     <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 card-hover">
                         <div class="flex items-center gap-2 mb-4">
                             <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600"><i data-lucide="box" class="h-5 w-5"></i></div>
@@ -84,8 +80,8 @@
                 <div class="lg:col-span-4">
                     <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 h-full">
                         <div class="mb-4 border-b border-slate-100 pb-2">
-                            <h2 class="text-lg font-bold">战略维度强度分析</h2>
-                            <p class="text-xs text-slate-400">基于营销文本关键词频率的定性评分</p>
+                            <h2 class="text-lg font-bold">战略维度强度对比</h2>
+                            <p class="text-xs text-slate-400">全行业评分矩阵 (AI / Local / Innovation / ESG / Partner)</p>
                         </div>
                         <div class="chart-container flex items-center justify-center">
                             <canvas id="strategyChart"></canvas>
@@ -103,9 +99,9 @@
                         <thead class="bg-slate-100">
                             <tr>
                                 <th class="sticky-col px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase w-36">企业 (Company)</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[300px]">当季新品清单 (All NPIs)</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[300px]">品牌焦点 (Brand Focus)</th>
-                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[200px] border-l border-slate-200">传播渠道 (Channels)</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[300px]">新品 (NPIs)</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[250px]">焦点 (Focus)</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase min-w-[200px] border-l border-slate-200">渠道 (Channels)</th>
                             </tr>
                         </thead>
                         <tbody id="comparison-table-body" class="bg-white divide-y divide-slate-200"></tbody>
@@ -119,7 +115,6 @@
                 <h1 class="text-2xl font-bold text-slate-900 mb-2">市场动态与业务优先级</h1>
                 <p class="text-slate-600 max-w-3xl" id="market-intro">Loading...</p>
             </div>
-            
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 border-l-4 border-l-blue-500">
                     <div class="flex items-center justify-between mb-4">
@@ -147,7 +142,6 @@
                     </div>
                 </div>
             </div>
-            
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="bg-slate-50 px-6 py-4 border-b border-slate-200">
                     <h3 class="font-bold text-slate-800">趋势深度解读</h3>
@@ -159,10 +153,7 @@
     </main>
 
     <script>
-        /* ========================================================================
-           ★★★ 替换区域开始 (REPLACE START) ★★★
-           使用 Gemini 生成的 JSON 替换下面的 const reportData = { ... }; 
-           ======================================================================== */
+        // ★★★ 数据替换区 ★★★
         const reportData = {
 "period": "2025 Q4",
 "summary": {
@@ -318,20 +309,15 @@
 { "name": "医工研习社", "type": "Media" }
 ]
 }
-]
-};
-        /* ========================================================================
-           ★★★ 替换区域结束 (REPLACE END) ★★★
-           ======================================================================== */
+]        };
+        // ★★★ 替换区域结束 ★★★
 
-        // --- Render Logic ---
         let currentId = reportData.competitors[0] ? reportData.competitors[0].id : '';
         let radarChart = null;
 
         function init() {
             document.getElementById('report-period').innerText = reportData.period;
             
-            // Market View
             const m = reportData.market;
             document.getElementById('market-intro').innerText = m.intro;
             document.getElementById('market-macro-list').innerHTML = m.macro_trends.map(t => `<li class="flex items-start gap-2"><span class="text-blue-500">•</span> ${t}</li>`).join('');
@@ -341,12 +327,12 @@
             document.getElementById('market-strategy-desc').innerText = m.strategy.desc;
             document.getElementById('market-deep-dive').innerHTML = m.deep_dive.map(d => `<div><h4 class="font-semibold text-sky-600 mb-2">${d.title}</h4><p class="text-sm text-slate-600 leading-relaxed">${d.text}</p></div>`).join('');
 
-            // Summary
             document.getElementById('comp-summary-title').innerText = reportData.summary.title;
             document.getElementById('comp-summary-text').innerText = reportData.summary.text;
 
             renderCompetitorList();
             renderComparisonTable();
+            initChart();
             if(currentId) updateCompetitorView(currentId);
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
@@ -372,11 +358,10 @@
 
             document.getElementById('brand-focus-list').innerHTML = data.focus.map(f => `<li class="flex items-start gap-3"><span class="h-1.5 w-1.5 rounded-full bg-sky-500 mt-2 shrink-0"></span><span>${f}</span></li>`).join('');
             
-            // Render NPIs
             const npiHtml = (data.npiList && data.npiList.length) ? data.npiList.map(n => `<li class="flex items-center gap-2"><i data-lucide="check-circle" class="h-4 w-4 text-indigo-500"></i><span class="font-medium">${n}</span></li>`).join('') : '<li class="text-slate-400">暂无数据</li>';
             document.getElementById('npi-content').innerHTML = `<ul class="space-y-2">${npiHtml}</ul>`;
 
-            updateChart(data);
+            highlightChart(data.name);
             setTimeout(() => lucide.createIcons(), 0);
         }
 
@@ -405,23 +390,47 @@
             `).join('');
         }
 
-        function updateChart(data) {
+        function initChart() {
             const ctx = document.getElementById('strategyChart').getContext('2d');
-            if (radarChart) radarChart.destroy();
+            const datasets = reportData.competitors.map(c => ({
+                label: c.name,
+                data: [c.scores.ai, c.scores.local, c.scores.innovation, c.scores.esg, c.scores.partner],
+                borderColor: c.color,
+                backgroundColor: c.color.replace('rgb', 'rgba').replace(')', ', 0.05)'),
+                borderWidth: 1,
+                pointRadius: 2,
+                order: 10
+            }));
+
             radarChart = new Chart(ctx, {
                 type: 'radar',
                 data: {
                     labels: ['AI & Digital', 'Localization', 'Innovation', 'ESG', 'Partner'],
-                    datasets: [{
-                        label: data.name,
-                        data: [data.scores.ai, data.scores.local, data.scores.innovation, data.scores.esg, data.scores.partner],
-                        backgroundColor: data.color.replace('rgb', 'rgba').replace(')', ', 0.2)'),
-                        borderColor: data.color,
-                        borderWidth: 2
-                    }]
+                    datasets: datasets
                 },
-                options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 5, ticks: {display: false} } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { r: { suggestedMin: 0, suggestedMax: 5, ticks: {display: false} } },
+                    plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: {size: 10} } } }
+                }
             });
+        }
+
+        function highlightChart(selectedName) {
+            if (!radarChart) return;
+            radarChart.data.datasets.forEach(ds => {
+                if (ds.label === selectedName) {
+                    ds.borderWidth = 3; ds.pointRadius = 4;
+                    ds.backgroundColor = ds.borderColor.replace('rgb', 'rgba').replace(')', ', 0.2)');
+                    ds.order = 1;
+                } else {
+                    ds.borderWidth = 1; ds.pointRadius = 2;
+                    ds.backgroundColor = ds.borderColor.replace('rgb', 'rgba').replace(')', ', 0.05)');
+                    ds.order = 10;
+                }
+            });
+            radarChart.update();
         }
 
         function switchView(view) {
